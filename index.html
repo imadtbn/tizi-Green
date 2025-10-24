@@ -633,11 +633,11 @@
 
         // تهيئة الخريطة
         function initMap() {
-            // مركز الخريطة على الجزائر
-            const algeriaCenter = [28.0339, 1.6596];
+            // مركز الخريطة على تيزي وزو
+            const tiziouzouCenter = [36.7167, 4.0500];
 
             // إنشاء الخريطة
-            map = L.map('map').setView(algeriaCenter, 6);
+            map = L.map('map').setView(algeriaCenter, 8);
 
             // إضافة طبقة الخريطة الأساسية
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
