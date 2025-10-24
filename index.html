@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تيزي وزو بإذن الله</title>
+    
+    <!-- إضافة Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    
+    <!-- إضافة Font Awesome للرموز -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        h1 {
+            color: #2a5298;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .map-container {
+            flex: 1;
+            min-width: 300px;
+            height: 600px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .data-panel {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 10px;
+            flex: 1;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: #2a5298;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.2);
+        }
+
+        .btn {
+            padding: 12px 20px;
+            background: #2a5298;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background: #1e3c72;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-secondary {
+            background: #4CAF50;
+        }
+
+        .btn-secondary:hover {
+            background: #388E3C;
+        }
+
+        .btn-danger {
+            background: #f44336;
+        }
+
+        .btn-danger:hover {
+            background: #d32f2f;
+        }
+
+        .data-table {
+            overflow-y: auto;
+            flex: 1;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: right;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th {
+            background: #2a5298;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        .highlight {
+            background-color: #ffeb3b !important;
+            border-left: 4px solid #ff5722;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { background-color: #ffeb3b; }
+            50% { background-color: #fff8e1; }
+            100% { background-color: #ffeb3b; }
+        }
+
+        .action-btn {
+            padding: 8px 12px;
+            background: #2a5298;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: #1e3c72;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* تصميم متجاوب */
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .map-container, .data-panel {
+                min-width: 100%;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            .search-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>خريطة مواقع التشجير في تيزي وزو</h1>
+            <p class="subtitle">استكشف مواقع التشجير في جميع ولاية تيزي وزو وابحث عن أقرب موقع إليك</p>
+            <p class="subtitle">25 أكتوبر 2025 يوم تاريخي</p>
+
+        </header>
+
+        <div class="main-content">
+            <div class="map-container">
+                <div id="map"></div>
+            </div>
+
+            <div class="data-panel">
+                <div class="controls">
+                    <div class="search-container">
+                        <input type="text" id="searchInput" placeholder="ابحث عن ولاية أو بلدية...">
+                        <button class="btn btn-danger" id="resetSearch">
+                            <i class="fas fa-times"></i> إعادة تعيين
+                        </button>
+                    </div>
+                    <button class="btn" id="findNearest">
+                        <i class="fas fa-location-arrow"></i> ابحث عن أقرب موقع
+                    </button>
+                    <button class="btn btn-secondary" id="showAll">
+                        <i class="fas fa-globe-africa"></i> عرض جميع المواقع
+                    </button>
+                </div>
+
+                <div class="data-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>الولاية</th>
+                                <th>البلدية</th>
+                                <th>المنطقة</th>
+                                <th>المسافة</th>
+                                <th>وقت السير</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- سيتم ملء الجدول بالبيانات من السكريبت -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>© 2023 خريطة مواقع التشجير في الجزائر - جميع الحقوق محفوظة</p>
+        </footer>
+    </div>
+
+    <!-- إضافة Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+    <script>
+        // بيانات مناطق التشجير (مثال مختصر)
+        const plantingSites = [
+            
+        
+           
+            // تيزي وزو (ID 15)
+            { id: 15, state: "تيزي وزو", municipality: "الأربعاء ناث إيراثن", area: "الأربعاء ناث إيراثن", lat: 36.63749180, lng: 4.20284660 },
+            { id: 15, state: "تيزي وزو", municipality: "مقلع", area: "مقلع", lat: 36.68763910, lng: 4.26811850 },
+            { id: 15, state: "تيزي وزو", municipality: "صوامع", area: "صوامع", lat: 36.64228760, lng: 4.34221780 },
+            { id: 15, state: "تيزي وزو", municipality: "تيزي راشد", area: "تيزي راشد", lat: 36.67896620, lng: 4.20861640 },
+            { id: 15, state: "تيزي وزو", municipality: "أيت يحيى", area: "أيت يحيى", lat: 36.59925460, lng: 4.34346790 },
+            { id: 15, state: "تيزي وزو", municipality: "أبي يوسف", area: "أبي يوسف", lat: 36.53847460, lng: 4.34386120 },
+            { id: 15, state: "تيزي وزو", municipality: "إفرحونان", area: "إفرحونان", lat: 36.52096750, lng: 4.36952220 },
+            { id: 15, state: "تيزي وزو", municipality: "أيت تودرت", area: "أيت تودرت", lat: 36.52031060, lng: 4.18445130 },
+            { id: 15, state: "تيزي وزو", municipality: "زكري", area: "زكري", lat: 36.78033970, lng: 4.58951930 },
+            { id: 15, state: "تيزي وزو", municipality: "إعكورن", area: "إعكورن", lat: 36.73359370, lng: 4.43899440 },
+            { id: 15, state: "تيزي وزو", municipality: "بني زيكي", area: "بني زيكي", lat: 36.56584600, lng: 4.50680050 },
+            { id: 15, state: "تيزي وزو", municipality: "أيت يحي موسى", area: "أيت يحي موسى", lat: 36.63791220, lng: 3.88622830 },
+            { id: 15, state: "تيزي وزو", municipality: "بوغني", area: "بوغني", lat: 36.54074710, lng: 3.95712850 },
+            { id: 15, state: "تيزي وزو", municipality: "بوزقن", area: "بوزقن", lat: 36.61704120, lng: 4.47702400 },
+            { id: 15, state: "تيزي وزو", municipality: "عين الزاوية", area: "عين الزاوية", lat: 36.55023510, lng: 3.89486740 },
+            { id: 15, state: "تيزي وزو", municipality: "أسي يوسف", area: "أسي يوسف", lat: 36.50554210, lng: 4.01451540 },
+            { id: 15, state: "تيزي وزو", municipality: "بونوح", area: "بونوح", lat: 36.49326500, lng: 3.93756560 },
+            { id: 15, state: "تيزي وزو", municipality: "سيدي نعمان", area: "سيدي نعمان", lat: 36.75861770, lng: 3.98142330 },
+            { id: 15, state: "تيزي وزو", municipality: "مشطراس", area: "مشطراس", lat: 36.54389170, lng: 4.01109200 },
+            { id: 15, state: "تيزي وزو", municipality: "تادمايت", area: "تادمايت", lat: 36.74465730, lng: 3.90122560 },
+            { id: 15, state: "تيزي وزو", municipality: "ذراع بن خدة", area: "ذراع بن خدة", lat: 36.73313430, lng: 3.95909030 },
+            { id: 15, state: "تيزي وزو", municipality: "ذراع الميزان", area: "ذراع الميزان", lat: 36.53506480, lng: 3.83803580 },
+            { id: 15, state: "تيزي وزو", municipality: "مكيرة", area: "مكيرة", lat: 36.63156750, lng: 3.78300060 },
+            { id: 15, state: "تيزي وزو", municipality: "فريقات", area: "فريقات", lat: 36.51335320, lng: 3.88565980 },
+            { id: 15, state: "تيزي وزو", municipality: "واقنون", area: "واقنون", lat: 36.75884920, lng: 4.18441090 },
+            { id: 15, state: "تيزي وزو", municipality: "ماكودة", area: "ماكودة", lat: 36.79197340, lng: 4.06242210 },
+            { id: 15, state: "تيزي وزو", municipality: "بوجيمة", area: "بوجيمة", lat: 36.80470720, lng: 4.14884000 },
+            { id: 15, state: "تيزي وزو", municipality: "فريحة", area: "فريحة", lat: 36.75739900, lng: 4.31944540 },
+            { id: 15, state: "تيزي وزو", municipality: "ميزرانة", area: "ميزرانة", lat: 36.84471640, lng: 4.09625880 },
+            { id: 15, state: "تيزي وزو", municipality: "أزفون", area: "أزفون", lat: 36.89307250, lng: 4.42039170 },
+            { id: 15, state: "تيزي وزو", municipality: "أيت عقواشة", area: "أيت عقواشة", lat: 36.61781360, lng: 4.23248800 },
+            { id: 15, state: "تيزي وزو", municipality: "أقرو", area: "أقرو", lat: 36.80743900, lng: 4.44218460 },
+            { id: 15, state: "تيزي وزو", municipality: "أغريب", area: "أغريب", lat: 36.80453130, lng: 4.32309470 },
+            { id: 15, state: "تيزي وزو", municipality: "عزازقة", area: "عزازقة", lat: 36.74473800, lng: 4.37163990 },
+
+            
+            // يمكنك إضافة باقي البيانات هنا
+        ];
+
+        // المتغيرات العامة
+        let map;
+        let markers = [];
+        let userMarker = null;
+        let userLocation = null;
+
+        // تهيئة الخريطة
+        function initMap() {
+            // مركز الخريطة على الجزائر
+            const algeriaCenter = [28.0339, 1.6596];
+
+            // إنشاء الخريطة
+            map = L.map('map').setView(algeriaCenter, 6);
+
+            // إضافة طبقة الخريطة الأساسية
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // إضافة علامات مواقع التشجير
+            plantingSites.forEach(site => {
+                const marker = L.marker([site.lat, site.lng])
+                    .addTo(map)
+                    .bindPopup(`
+                        <div style="text-align: right; padding: 10px;">
+                            <h3 style="margin: 0 0 5px;">${site.area}</h3>
+                            <p><strong>الولاية:</strong> ${site.state}</p>
+                            <p><strong>البلدية:</strong> ${site.municipality}</p>
+                            <button class="action-btn" onclick="focusOnSite(${site.id}, '${site.state}', '${site.municipality}')">التفاصيل</button>
+                        </div>
+                    `);
+
+                markers.push({
+                    id: site.id,
+                    marker: marker,
+                    site: site
+                });
+            });
+
+            // ملء جدول البيانات
+            populateTable(plantingSites);
+
+            // إضافة الأحداث
+            document.getElementById('searchInput').addEventListener('input', handleSearch);
+            document.getElementById('resetSearch').addEventListener('click', resetSearch);
+            document.getElementById('findNearest').addEventListener('click', findNearestSite);
+            document.getElementById('showAll').addEventListener('click', showAllSites);
+        }
+
+        // ملء جدول البيانات
+        function populateTable(data) {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+
+            data.forEach(site => {
+                const row = document.createElement('tr');
+                row.classList.add('fade-in');
+                
+                // إضافة data attributes لتسهيل البحث
+                row.setAttribute('data-site-id', site.id);
+                row.setAttribute('data-state', site.state);
+                row.setAttribute('data-municipality', site.municipality);
+                row.setAttribute('data-area', site.area);
+
+                // حساب المسافة ووقت السير إذا كان موقع المستخدم معروفًا
+                let distance = 'غير معروف';
+                let walkingTime = 'غير معروف';
+
+                if (userLocation) {
+                    const dist = calculateHaversineDistance(
+                        userLocation.lat, userLocation.lng,
+                        site.lat, site.lng
+                    );
+                    distance = `${dist.toFixed(2)} كم`;
+                    walkingTime = calculateWalkingTime(dist);
+                }
+
+                row.innerHTML = `
+                    <td>${site.id}</td>
+                    <td>${site.state}</td>
+                    <td>${site.municipality}</td>
+                    <td>${site.area}</td>
+                    <td>${distance}</td>
+                    <td>${walkingTime}</td>
+                    <td>
+                        <button class="action-btn" onclick="navigateToSite(${site.lat}, ${site.lng}, '${site.area}')">
+                            <i class="fas fa-directions"></i> التوجه
+                        </button>
+                    </td>
+                `;
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        // البحث في الجدول
+        function handleSearch(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredSites = plantingSites.filter(site =>
+                site.state.toLowerCase().includes(searchTerm) ||
+                site.municipality.toLowerCase().includes(searchTerm) ||
+                site.area.toLowerCase().includes(searchTerm)
+            );
+            populateTable(filteredSites);
+            updateMapMarkers(filteredSites);
+        }
+
+        // إعادة تعيين البحث
+        function resetSearch() {
+            document.getElementById('searchInput').value = '';
+            populateTable(plantingSites);
+            updateMapMarkers(plantingSites);
+        }
+
+        // تحديث العلامات على الخريطة بناءً على البحث
+        function updateMapMarkers(sites) {
+            // إخفاء جميع العلامات
+            markers.forEach(markerObj => {
+                map.removeLayer(markerObj.marker);
+            });
+
+            // إضافة العلامات المرئية فقط
+            markers.forEach(markerObj => {
+                if (sites.some(site => 
+                    site.id === markerObj.id && 
+                    site.state === markerObj.site.state && 
+                    site.municipality === markerObj.site.municipality
+                )) {
+                    map.addLayer(markerObj.marker);
+                }
+            });
+        }
+
+        // البحث عن أقرب موقع باستخدام المسافات على الطريق
+        async function findNearestSite() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    async (position) => {
+                        userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+
+                        console.log("📍 موقعك الحالي:", userLocation);
+
+                        // تحديث مركز الخريطة
+                        map.setView([userLocation.lat, userLocation.lng], 10);
+
+                        // إضافة علامة لموقع المستخدم
+                        if (userMarker) {
+                            map.removeLayer(userMarker);
+                        }
+
+                        userMarker = L.marker([userLocation.lat, userLocation.lng])
+                            .addTo(map)
+                            .bindPopup('📍 موقعك الحالي')
+                            .openPopup();
+
+                        // إظهار تحميل
+                        showLoadingMessage('جاري حساب المسافات على الطرق...');
+
+                        let nearestSite = null;
+                        let minDistance = Infinity;
+                        let distances = [];
+
+                        // حساب المسافات لجميع المواقع
+                        for (const markerObj of markers) {
+                            try {
+                                const distance = await calculateRoadDistance(
+                                    userLocation.lat, userLocation.lng,
+                                    markerObj.site.lat, markerObj.site.lng
+                                );
+                                
+                                distances.push({
+                                    site: markerObj.site,
+                                    distance: distance,
+                                    marker: markerObj
+                                });
+
+                                console.log(`🛣️ المسافة على الطريق إلى ${markerObj.site.area}: ${distance.toFixed(2)} كم`);
+
+                                if (distance < minDistance) {
+                                    minDistance = distance;
+                                    nearestSite = markerObj;
+                                }
+                            } catch (error) {
+                                console.error(`خطأ في حساب المسافة إلى ${markerObj.site.area}:`, error);
+                                // استخدام المسافة الجوية كبديل
+                                const haversineDistance = calculateHaversineDistance(
+                                    userLocation.lat, userLocation.lng,
+                                    markerObj.site.lat, markerObj.site.lng
+                                );
+                                distances.push({
+                                    site: markerObj.site,
+                                    distance: haversineDistance,
+                                    marker: markerObj
+                                });
+                            }
+                        }
+
+                        // إخفاء تحميل
+                        hideLoadingMessage();
+
+                        // ترتيب المسافات من الأقرب إلى الأبعد
+                        distances.sort((a, b) => a.distance - b.distance);
+                        
+                        console.log("🏆 أقرب 5 مواقع:", distances.slice(0, 5));
+
+                        // إظهار أقرب موقع
+                        if (nearestSite) {
+                            console.log("🎯 أقرب موقع تم تحديده:", nearestSite.site);
+                            nearestSite.marker.openPopup();
+
+                            // رسم خط بين موقع المستخدم وأقرب موقع
+                            if (window.distanceLine) {
+                                map.removeLayer(window.distanceLine);
+                            }
+
+                            window.distanceLine = L.polyline([
+                                [userLocation.lat, userLocation.lng],
+                                [nearestSite.site.lat, nearestSite.site.lng]
+                            ], {
+                                color: '#FF5722',
+                                weight: 3,
+                                opacity: 0.7,
+                                dashArray: '10, 10'
+                            }).addTo(map);
+
+                            // تحديث الجدول بالمسافات الجديدة
+                            updateTableWithDistances(distances);
+                            
+                            // إبراز الصف الأقرب
+                            highlightNearestRow(nearestSite.site);
+                        }
+                    },
+                    (error) => {
+                        hideLoadingMessage();
+                        handleGeolocationError(error);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 15000,
+                        maximumAge: 60000
+                    }
+                );
+            } else {
+                alert("متصفحك لا يدعم خدمة تحديد الموقع.");
+            }
+        }
+
+        // دالة جديدة لحساب المسافة على الطريق
+        async function calculateRoadDistance(startLat, startLng, endLat, endLng) {
+            try {
+                const url = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=false`;
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.code === 'Ok' && data.routes.length > 0) {
+                    // المسافة بالمتر، نحولها إلى كيلومتر
+                    const distanceInMeters = data.routes[0].distance;
+                    const distanceInKm = distanceInMeters / 1000;
+                    return distanceInKm;
+                } else {
+                    // إذا فشل الحصول على المسافة على الطريق، نستخدم المسافة الجوية كبديل
+                    console.warn('فشل في الحصول على المسافة على الطريق، استخدام المسافة الجوية');
+                    return calculateHaversineDistance(startLat, startLng, endLat, endLng);
+                }
+            } catch (error) {
+                console.error('خطأ في حساب المسافة على الطريق:', error);
+                return calculateHaversineDistance(startLat, startLng, endLat, endLng);
+            }
+        }
+
+        // دالة المسافة الجوية (كبديل)
+        function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // تحديث الجدول بالمسافات
+        function updateTableWithDistances(distances) {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+
+            // إنشاء خريطة للمسافات للبحث السريع
+            const distanceMap = new Map();
+            distances.forEach(item => {
+                distanceMap.set(item.site.id + item.site.state + item.site.municipality, item.distance);
+            });
+
+            // إعادة بناء الجدول
+            plantingSites.forEach(site => {
+                const row = document.createElement('tr');
+                row.classList.add('fade-in');
+
+                // إضافة data attributes
+                row.setAttribute('data-site-id', site.id);
+                row.setAttribute('data-state', site.state);
+                row.setAttribute('data-municipality', site.municipality);
+                row.setAttribute('data-area', site.area);
+
+                const key = site.id + site.state + site.municipality;
+                let distance = 'غير معروف';
+                let walkingTime = 'غير معروف';
+
+                if (distanceMap.has(key)) {
+                    const dist = distanceMap.get(key);
+                    distance = `${dist.toFixed(2)} كم`;
+                    walkingTime = calculateWalkingTime(dist);
+                }
+
+                row.innerHTML = `
+                    <td>${site.id}</td>
+                    <td>${site.state}</td>
+                    <td>${site.municipality}</td>
+                    <td>${site.area}</td>
+                    <td>${distance}</td>
+                    <td>${walkingTime}</td>
+                    <td>
+                        <button class="action-btn" onclick="navigateToSite(${site.lat}, ${site.lng}, '${site.area}')">
+                            <i class="fas fa-directions"></i> التوجه
+                        </button>
+                    </td>
+                `;
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        // إبراز الصف الأقرب في الجدول
+        function highlightNearestRow(site) {
+            const rows = document.querySelectorAll('#tableBody tr');
+            let found = false;
+            
+            console.log(`🔍 البحث عن الموقع:`, site);
+            
+            rows.forEach((row, index) => {
+                row.classList.remove('highlight');
+                
+                // استخدام data attributes للتأكد من المطابقة
+                const rowSiteId = parseInt(row.getAttribute('data-site-id'));
+                const rowState = row.getAttribute('data-state');
+                const rowMunicipality = row.getAttribute('data-municipality');
+                
+                if (rowSiteId === site.id && 
+                    rowState === site.state && 
+                    rowMunicipality === site.municipality) {
+                    
+                    row.classList.add('highlight');
+                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    found = true;
+                    console.log(`✅ تم إبراز الصف ${index + 1} بنجاح`);
+                }
+            });
+            
+            if (!found) {
+                console.warn(`⚠️ لم يتم العثور على الصف الدقيق للموقع`);
+            }
+        }
+
+        // عرض جميع المواقع
+        function showAllSites() {
+            // إزالة علامة المستخدم إذا كانت موجودة
+            if (userMarker) {
+                map.removeLayer(userMarker);
+                userMarker = null;
+            }
+
+            // إزالة خط المسافة إذا كان موجودًا
+            if (window.distanceLine) {
+                map.removeLayer(window.distanceLine);
+            }
+
+            // إعادة ضبط الخريطة لتعرض جميع المواقع
+            const group = new L.featureGroup(markers.map(m => m.marker));
+            map.fitBounds(group.getBounds().pad(0.1));
+
+            // إزالة التمييز من الجدول
+            const rows = document.querySelectorAll('#tableBody tr');
+            rows.forEach(row => row.classList.remove('highlight'));
+            
+            // إعادة تعيين الجدول
+            populateTable(plantingSites);
+        }
+
+        // التركيز على موقع محدد
+        function focusOnSite(siteId, state, municipality) {
+            const site = plantingSites.find(s => 
+                s.id === siteId && 
+                s.state === state && 
+                s.municipality === municipality
+            );
+            if (site) {
+                map.setView([site.lat, site.lng], 13);
+                highlightNearestRow(site);
+            }
+        }
+
+        // التوجه إلى موقع محدد
+        function navigateToSite(lat, lng, siteName) {
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            
+            if (confirm(`هل تريد فتح خرائط جوجل للتوجه إلى ${siteName}؟`)) {
+                if (isMobile) {
+                    window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank');
+                } else {
+                    window.open(`https://www.google.com/maps/dir//${lat},${lng}/@${lat},${lng},15z`, '_blank');
+                }
+            }
+        }
+
+        // حساب وقت السير (بافتراض سرعة 5 كم/ساعة للمشي)
+        function calculateWalkingTime(distance) {
+            const walkingSpeed = 5; // سرعة مشي واقعية (5 كم/ساعة)
+            const timeInHours = distance / walkingSpeed;
+            
+            if (timeInHours < 1) {
+                const minutes = Math.round(timeInHours * 60);
+                return `${minutes} دقيقة`;
+            } else {
+                const hours = Math.floor(timeInHours);
+                const minutes = Math.round((timeInHours - hours) * 60);
+                return `${hours} ساعة ${minutes} دقيقة`;
+            }
+        }
+
+        // دوال مساعدة للتحميل والعرض
+        function showLoadingMessage(message) {
+            let loadingDiv = document.getElementById('loadingMessage');
+            if (!loadingDiv) {
+                loadingDiv = document.createElement('div');
+                loadingDiv.id = 'loadingMessage';
+                loadingDiv.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: rgba(0,0,0,0.8);
+                    color: white;
+                    padding: 20px;
+                    border-radius: 10px;
+                    z-index: 1000;
+                `;
+                document.body.appendChild(loadingDiv);
+            }
+            loadingDiv.innerHTML = `
+                <div style="text-align: center;">
+                    <div class="loading-spinner" style="margin: 0 auto 10px;"></div>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        function hideLoadingMessage() {
+            const loadingDiv = document.getElementById('loadingMessage');
+            if (loadingDiv) {
+                loadingDiv.remove();
+            }
+        }
+
+        function handleGeolocationError(error) {
+            let errorMessage = "تعذر الحصول على موقعك. ";
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMessage += "تم رفض الإذن لتحديد الموقع.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMessage += "معلومات الموقع غير متاحة.";
+                    break;
+                case error.TIMEOUT:
+                    errorMessage += "انتهت مهلة طلب الموقع.";
+                    break;
+                default:
+                    errorMessage += "حدث خطأ غير معروف.";
+                    break;
+            }
+            alert(errorMessage);
+        }
+
+        // تهيئة الخريطة عند تحميل الصفحة
+        window.onload = initMap;
+    </script>
+</body>
+</html>
