@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تيزي وزو بإذن الله</title>
+    
+    <!-- إضافة Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    
+    <!-- إضافة Font Awesome للرموز -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #333;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transform: translateY(0);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        header:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        h1 {
+            color: #2a5298;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            right: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #2a5298, transparent);
+            border-radius: 3px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .map-container {
+            flex: 1;
+            min-width: 300px;
+            height: 600px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transform: translateY(20px);
+            opacity: 0;
+            animation: slideUp 0.5s ease forwards;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            border-radius: 15px;
+        }
+
+        .data-panel {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+            transform: translateY(20px);
+            opacity: 0;
+            animation: slideUp 0.5s ease 0.2s forwards;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 10px;
+            flex: 1;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        input[type="text"]:focus {
+            border-color: #2a5298;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.2);
+            transform: scale(1.02);
+        }
+
+        .btn {
+            padding: 12px 20px;
+            background: #2a5298;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            background: #1e3c72;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #4CAF50;
+        }
+
+        .btn-secondary:hover {
+            background: #388E3C;
+        }
+
+        .btn-danger {
+            background: #f44336;
+        }
+
+        .btn-danger:hover {
+            background: #d32f2f;
+        }
+
+        .data-table {
+            overflow-y: auto;
+            flex: 1;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+            position: relative;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: right;
+            border-bottom: 1px solid #e0e0e0;
+            transition: background-color 0.3s ease;
+        }
+
+        th {
+            background: #2a5298;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        tr {
+            transition: all 0.3s ease;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+            transform: scale(1.01);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .highlight {
+            background-color: #ffeb3b !important;
+            border-left: 4px solid #ff5722;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { background-color: #ffeb3b; }
+            50% { background-color: #fff8e1; }
+            100% { background-color: #ffeb3b; }
+        }
+
+        .action-btn {
+            padding: 8px 12px;
+            background: #2a5298;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: #1e3c72;
+            transform: scale(1.05);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            color: white;
+            font-size: 14px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* شريط التقدم */
+        .progress-bar {
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .progress-bar-inner {
+            height: 100%;
+            background: linear-gradient(90deg, #2a5298, #1e3c72);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 2px;
+        }
+
+        /* تحسينات للهواتف */
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            z-index: 1000;
+            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .mobile-nav-buttons {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .mobile-nav-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: none;
+            border: none;
+            color: #2a5298;
+            font-size: 12px;
+            padding: 5px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-nav-btn i {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .mobile-nav-btn.active {
+            background: #2a5298;
+            color: white;
+        }
+
+        /* تصميم متجاوب */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .main-content {
+                flex-direction: column;
+                margin-bottom: 70px; /* مساحة للتنقل المتنقل */
+            }
+            
+            .map-container, .data-panel {
+                min-width: 100%;
+                height: 400px; /* ارتفاع أقل على الهواتف */
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            .search-container {
+                flex-direction: column;
+            }
+
+            .btn {
+                justify-content: center;
+                padding: 15px;
+            }
+
+            th, td {
+                padding: 8px 10px;
+                font-size: 14px;
+            }
+
+            .mobile-nav {
+                display: block;
+            }
+
+            /* تحسينات إضافية للجدول على الهواتف */
+            .data-table {
+                font-size: 14px;
+            }
+
+            table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .map-container, .data-panel {
+                height: 350px;
+            }
+
+            th, td {
+                padding: 6px 8px;
+                font-size: 12px;
+            }
+
+            .btn {
+                font-size: 14px;
+                padding: 12px;
+            }
+        }
+
+        /* تأثيرات إضافية للخريطة */
+        .leaflet-popup-content {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .leaflet-popup-content-wrapper {
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* تأثيرات للرسائل */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+            backdrop-filter: blur(10px);
+            border-left: 4px solid #2a5298;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            border-left-color: #4CAF50;
+        }
+
+        .notification.error {
+            border-left-color: #f44336;
+        }
+
+        /* تأثيرات للتمرير */
+        .scroll-effect {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .scroll-effect.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="scroll-effect">
+            <h1>خريطة مواقع التشجير في تيزي وزو</h1>
+            <p class="subtitle">استكشف مواقع التشجير في جميع ولاية تيزي وزو وابحث عن أقرب موقع إليك</p>
+            <p class="subtitle">25 أكتوبر 2025 يوم تاريخي</p>
+        </header>
+
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-bar-inner" id="progressBarInner"></div>
+        </div>
+
+        <div class="main-content">
+            <div class="map-container">
+                <div id="map"></div>
+            </div>
+
+            <div class="data-panel">
+                <div class="controls">
+                    <div class="search-container">
+                        <input type="text" id="searchInput" placeholder="ابحث عن ولاية أو بلدية...">
+                        <button class="btn btn-danger" id="resetSearch">
+                            <i class="fas fa-times"></i> إعادة تعيين
+                        </button>
+                    </div>
+                    <button class="btn" id="findNearest">
+                        <i class="fas fa-location-arrow"></i> ابحث عن أقرب موقع
+                    </button>
+                    <button class="btn btn-secondary" id="showAll">
+                        <i class="fas fa-globe-africa"></i> عرض جميع المواقع
+                    </button>
+                </div>
+
+                <div class="data-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>الولاية</th>
+                                <th>البلدية</th>
+                                <th>المنطقة</th>
+                                <th>المسافة</th>
+                                <th>وقت السير</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- سيتم ملء الجدول بالبيانات من السكريبت -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <footer class="scroll-effect">
+            <p>© 2023 خريطة مواقع التشجير في الجزائر - جميع الحقوق محفوظة</p>
+        </footer>
+    </div>
+
+    <!-- شريط التنقل للهواتف -->
+    <div class="mobile-nav">
+        <div class="mobile-nav-buttons">
+            <button class="mobile-nav-btn" id="mobileSearch">
+                <i class="fas fa-search"></i>
+                <span>بحث</span>
+            </button>
+            <button class="mobile-nav-btn" id="mobileLocation">
+                <i class="fas fa-location-arrow"></i>
+                <span>موقعي</span>
+            </button>
+            <button class="mobile-nav-btn" id="mobileMap">
+                <i class="fas fa-map"></i>
+                <span>الخريطة</span>
+            </button>
+            <button class="mobile-nav-btn" id="mobileList">
+                <i class="fas fa-list"></i>
+                <span>القائمة</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- إضافة Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+    <script>
+        // بيانات مناطق التشجير (مثال مختصر)
+        const plantingSites = [
+            // تيزي وزو (ID 15)
+            { id: 15, state: "تيزي وزو", municipality: "الأربعاء ناث إيراثن", area: "الأربعاء ناث إيراثن", lat: 36.63749180, lng: 4.20284660 },
+            { id: 15, state: "تيزي وزو", municipality: "مقلع", area: "مقلع", lat: 36.68763910, lng: 4.26811850 },
+            { id: 15, state: "تيزي وزو", municipality: "صوامع", area: "صوامع", lat: 36.64228760, lng: 4.34221780 },
+            { id: 15, state: "تيزي وزو", municipality: "تيزي راشد", area: "تيزي راشد", lat: 36.67896620, lng: 4.20861640 },
+            { id: 15, state: "تيزي وزو", municipality: "أيت يحيى", area: "أيت يحيى", lat: 36.59925460, lng: 4.34346790 },
+            { id: 15, state: "تيزي وزو", municipality: "أبي يوسف", area: "أبي يوسف", lat: 36.53847460, lng: 4.34386120 },
+            { id: 15, state: "تيزي وزو", municipality: "إفرحونان", area: "إفرحونان", lat: 36.52096750, lng: 4.36952220 },
+            { id: 15, state: "تيزي وزو", municipality: "أيت تودرت", area: "أيت تودرت", lat: 36.52031060, lng: 4.18445130 },
+            { id: 15, state: "تيزي وزو", municipality: "زكري", area: "زكري", lat: 36.78033970, lng: 4.58951930 },
+            { id: 15, state: "تيزي وزو", municipality: "إعكورن", area: "إعكورن", lat: 36.73359370, lng: 4.43899440 },
+            { id: 15, state: "تيزي وزو", municipality: "بني زيكي", area: "بني زيكي", lat: 36.56584600, lng: 4.50680050 },
+            { id: 15, state: "تيزي وزو", municipality: "أيت يحي موسى", area: "أيت يحي موسى", lat: 36.63791220, lng: 3.88622830 },
+            { id: 15, state: "تيزي وزو", municipality: "بوغني", area: "بوغني", lat: 36.54074710, lng: 3.95712850 },
+            { id: 15, state: "تيزي وزو", municipality: "بوزقن", area: "بوزقن", lat: 36.61704120, lng: 4.47702400 },
+            { id: 15, state: "تيزي وزو", municipality: "عين الزاوية", area: "عين الزاوية", lat: 36.55023510, lng: 3.89486740 },
+            { id: 15, state: "تيزي وزو", municipality: "أسي يوسف", area: "أسي يوسف", lat: 36.50554210, lng: 4.01451540 },
+            { id: 15, state: "تيزي وزو", municipality: "بونوح", area: "بونوح", lat: 36.49326500, lng: 3.93756560 },
+            { id: 15, state: "تيزي وزو", municipality: "سيدي نعمان", area: "سيدي نعمان", lat: 36.75861770, lng: 3.98142330 },
+            { id: 15, state: "تيزي وزو", municipality: "مشطراس", area: "مشطراس", lat: 36.54389170, lng: 4.01109200 },
+            { id: 15, state: "تيزي وزو", municipality: "تادمايت", area: "تادمايت", lat: 36.74465730, lng: 3.90122560 },
+            { id: 15, state: "تيزي وزو", municipality: "ذراع بن خدة", area: "ذراع بن خدة", lat: 36.73313430, lng: 3.95909030 },
+            { id: 15, state: "تيزي وزو", municipality: "ذراع الميزان", area: "ذراع الميزان", lat: 36.53506480, lng: 3.83803580 },
+            { id: 15, state: "تيزي وزو", municipality: "مكيرة", area: "مكيرة", lat: 36.63156750, lng: 3.78300060 },
+            { id: 15, state: "تيزي وزو", municipality: "فريقات", area: "فريقات", lat: 36.51335320, lng: 3.88565980 },
+            { id: 15, state: "تيزي وزو", municipality: "واقنون", area: "واقنون", lat: 36.75884920, lng: 4.18441090 },
+            { id: 15, state: "تيزي وزو", municipality: "ماكودة", area: "ماكودة", lat: 36.79197340, lng: 4.06242210 },
+            { id: 15, state: "تيزي وزو", municipality: "بوجيمة", area: "بوجيمة", lat: 36.80470720, lng: 4.14884000 },
+            { id: 15, state: "تيزي وزو", municipality: "فريحة", area: "فريحة", lat: 36.75739900, lng: 4.31944540 },
+            { id: 15, state: "تيزي وزو", municipality: "ميزرانة", area: "ميزرانة", lat: 36.84471640, lng: 4.09625880 },
+            { id: 15, state: "تيزي وزو", municipality: "أزفون", area: "أزفون", lat: 36.89307250, lng: 4.42039170 },
+            { id: 15, state: "تيزي وزو", municipality: "أيت عقواشة", area: "أيت عقواشة", lat: 36.61781360, lng: 4.23248800 },
+            { id: 15, state: "تيزي وزو", municipality: "أقرو", area: "أقرو", lat: 36.80743900, lng: 4.44218460 },
+            { id: 15, state: "تيزي وزو", municipality: "أغريب", area: "أغريب", lat: 36.80453130, lng: 4.32309470 },
+            { id: 15, state: "تيزي وزو", municipality: "عزازقة", area: "عزازقة", lat: 36.74473800, lng: 4.37163990 },
+        ];
+
+        // المتغيرات العامة
+        let map;
+        let markers = [];
+        let userMarker = null;
+        let userLocation = null;
+
+        // تهيئة الخريطة
+        function initMap() {
+            // مركز الخريطة على الجزائر
+            const algeriaCenter = [28.0339, 1.6596];
+
+            // إنشاء الخريطة
+            map = L.map('map').setView(algeriaCenter, 6);
+
+            // إضافة طبقة الخريطة الأساسية
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // إضافة علامات مواقع التشجير
+            plantingSites.forEach(site => {
+                const marker = L.marker([site.lat, site.lng])
+                    .addTo(map)
+                    .bindPopup(`
+                        <div style="text-align: right; padding: 10px;">
+                            <h3 style="margin: 0 0 5px;">${site.area}</h3>
+                            <p><strong>الولاية:</strong> ${site.state}</p>
+                            <p><strong>البلدية:</strong> ${site.municipality}</p>
+                            <button class="action-btn" onclick="focusOnSite(${site.id}, '${site.state}', '${site.municipality}')">التفاصيل</button>
+                        </div>
+                    `);
+
+                markers.push({
+                    id: site.id,
+                    marker: marker,
+                    site: site
+                });
+            });
+
+            // ملء جدول البيانات
+            populateTable(plantingSites);
+
+            // إضافة الأحداث
+            document.getElementById('searchInput').addEventListener('input', handleSearch);
+            document.getElementById('resetSearch').addEventListener('click', resetSearch);
+            document.getElementById('findNearest').addEventListener('click', findNearestSite);
+            document.getElementById('showAll').addEventListener('click', showAllSites);
+
+            // أحداث التنقل المتنقل
+            document.getElementById('mobileSearch').addEventListener('click', () => {
+                document.getElementById('searchInput').focus();
+                setActiveMobileButton('mobileSearch');
+            });
+            
+            document.getElementById('mobileLocation').addEventListener('click', () => {
+                findNearestSite();
+                setActiveMobileButton('mobileLocation');
+            });
+            
+            document.getElementById('mobileMap').addEventListener('click', () => {
+                document.querySelector('.map-container').scrollIntoView({ behavior: 'smooth' });
+                setActiveMobileButton('mobileMap');
+            });
+            
+            document.getElementById('mobileList').addEventListener('click', () => {
+                document.querySelector('.data-panel').scrollIntoView({ behavior: 'smooth' });
+                setActiveMobileButton('mobileList');
+            });
+
+            // إضافة تأثيرات التمرير
+            initScrollEffects();
+
+            // إظهار إشعار ترحيب
+            showNotification('مرحباً بك في خريطة مواقع التشجير في تيزي وزو', 'success');
+        }
+
+        // تعيين الزر النشط في التنقل المتنقل
+        function setActiveMobileButton(buttonId) {
+            document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(buttonId).classList.add('active');
+        }
+
+        // إظهار إشعار
+        function showNotification(message, type = '') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <p>${message}</p>
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        // تهيئة تأثيرات التمرير
+        function initScrollEffects() {
+            const scrollElements = document.querySelectorAll('.scroll-effect');
+            
+            const elementInView = (el, dividend = 1) => {
+                const elementTop = el.getBoundingClientRect().top;
+                return (
+                    elementTop <= (window.innerHeight || document.documentElement.clientHeight) / dividend
+                );
+            };
+            
+            const displayScrollElement = (element) => {
+                element.classList.add('visible');
+            };
+            
+            const handleScrollAnimation = () => {
+                scrollElements.forEach((el) => {
+                    if (elementInView(el, 1.2)) {
+                        displayScrollElement(el);
+                    }
+                });
+            };
+            
+            window.addEventListener('scroll', () => {
+                handleScrollAnimation();
+            });
+            
+            // تشغيل مرة أولى عند التحميل
+            handleScrollAnimation();
+        }
+
+        // ملء جدول البيانات
+        function populateTable(data) {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+
+            data.forEach(site => {
+                const row = document.createElement('tr');
+                row.classList.add('fade-in');
+                
+                // إضافة data attributes لتسهيل البحث
+                row.setAttribute('data-site-id', site.id);
+                row.setAttribute('data-state', site.state);
+                row.setAttribute('data-municipality', site.municipality);
+                row.setAttribute('data-area', site.area);
+
+                // حساب المسافة ووقت السير إذا كان موقع المستخدم معروفًا
+                let distance = 'غير معروف';
+                let walkingTime = 'غير معروف';
+
+                if (userLocation) {
+                    const dist = calculateHaversineDistance(
+                        userLocation.lat, userLocation.lng,
+                        site.lat, site.lng
+                    );
+                    distance = `${dist.toFixed(2)} كم`;
+                    walkingTime = calculateWalkingTime(dist);
+                }
+
+                row.innerHTML = `
+                    <td>${site.id}</td>
+                    <td>${site.state}</td>
+                    <td>${site.municipality}</td>
+                    <td>${site.area}</td>
+                    <td>${distance}</td>
+                    <td>${walkingTime}</td>
+                    <td>
+                        <button class="action-btn" onclick="navigateToSite(${site.lat}, ${site.lng}, '${site.area}')">
+                            <i class="fas fa-directions"></i> التوجه
+                        </button>
+                    </td>
+                `;
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        // البحث في الجدول
+        function handleSearch(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredSites = plantingSites.filter(site =>
+                site.state.toLowerCase().includes(searchTerm) ||
+                site.municipality.toLowerCase().includes(searchTerm) ||
+                site.area.toLowerCase().includes(searchTerm)
+            );
+            populateTable(filteredSites);
+            updateMapMarkers(filteredSites);
+        }
+
+        // إعادة تعيين البحث
+        function resetSearch() {
+            document.getElementById('searchInput').value = '';
+            populateTable(plantingSites);
+            updateMapMarkers(plantingSites);
+            showNotification('تم إعادة تعيين البحث', 'success');
+        }
+
+        // تحديث العلامات على الخريطة بناءً على البحث
+        function updateMapMarkers(sites) {
+            // إخفاء جميع العلامات
+            markers.forEach(markerObj => {
+                map.removeLayer(markerObj.marker);
+            });
+
+            // إضافة العلامات المرئية فقط
+            markers.forEach(markerObj => {
+                if (sites.some(site => 
+                    site.id === markerObj.id && 
+                    site.state === markerObj.site.state && 
+                    site.municipality === markerObj.site.municipality
+                )) {
+                    map.addLayer(markerObj.marker);
+                }
+            });
+        }
+
+        // البحث عن أقرب موقع باستخدام المسافات على الطريق
+        async function findNearestSite() {
+            if (navigator.geolocation) {
+                // إظهار شريط التقدم
+                const progressBar = document.getElementById('progressBar');
+                const progressBarInner = document.getElementById('progressBarInner');
+                progressBar.style.display = 'block';
+                progressBarInner.style.width = '0%';
+                
+                navigator.geolocation.getCurrentPosition(
+                    async (position) => {
+                        userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+
+                        console.log("📍 موقعك الحالي:", userLocation);
+
+                        // تحديث شريط التقدم
+                        progressBarInner.style.width = '30%';
+
+                        // تحديث مركز الخريطة
+                        map.setView([userLocation.lat, userLocation.lng], 10);
+
+                        // إضافة علامة لموقع المستخدم
+                        if (userMarker) {
+                            map.removeLayer(userMarker);
+                        }
+
+                        userMarker = L.marker([userLocation.lat, userLocation.lng])
+                            .addTo(map)
+                            .bindPopup('📍 موقعك الحالي')
+                            .openPopup();
+
+                        // تحديث شريط التقدم
+                        progressBarInner.style.width = '50%';
+
+                        let nearestSite = null;
+                        let minDistance = Infinity;
+                        let distances = [];
+
+                        // حساب المسافات لجميع المواقع
+                        for (let i = 0; i < markers.length; i++) {
+                            const markerObj = markers[i];
+                            try {
+                                const distance = await calculateRoadDistance(
+                                    userLocation.lat, userLocation.lng,
+                                    markerObj.site.lat, markerObj.site.lng
+                                );
+                                
+                                distances.push({
+                                    site: markerObj.site,
+                                    distance: distance,
+                                    marker: markerObj
+                                });
+
+                                console.log(`🛣️ المسافة على الطريق إلى ${markerObj.site.area}: ${distance.toFixed(2)} كم`);
+
+                                // تحديث شريط التقدم تدريجياً
+                                progressBarInner.style.width = `${50 + (i / markers.length) * 40}%`;
+
+                                if (distance < minDistance) {
+                                    minDistance = distance;
+                                    nearestSite = markerObj;
+                                }
+                            } catch (error) {
+                                console.error(`❌ خطأ في حساب المسافة إلى ${markerObj.site.area}:`, error);
+                            }
+                        }
+
+                        // تحديث شريط التقدم
+                        progressBarInner.style.width = '100%';
+
+                        if (nearestSite) {
+                            // إظهار أقرب موقع
+                            map.setView([nearestSite.site.lat, nearestSite.site.lng], 12);
+                            nearestSite.marker.openPopup();
+
+                            // تحديث الجدول مع المسافات
+                            distances.sort((a, b) => a.distance - b.distance);
+                            const sortedSites = distances.map(item => item.site);
+                            populateTable(sortedSites);
+
+                            // إبراز أقرب موقع في الجدول
+                            setTimeout(() => {
+                                const rows = document.querySelectorAll('#tableBody tr');
+                                if (rows.length > 0) {
+                                    rows[0].classList.add('highlight');
+                                }
+                            }, 500);
+
+                            showNotification(`تم العثور على أقرب موقع: ${nearestSite.site.area} (${minDistance.toFixed(2)} كم)`, 'success');
+                        } else {
+                            showNotification('لم يتم العثور على مواقع قريبة', 'error');
+                        }
+
+                        // إخفاء شريط التقدم بعد ثانية
+                        setTimeout(() => {
+                            progressBar.style.display = 'none';
+                        }, 1000);
+                    },
+                    (error) => {
+                        console.error("❌ خطأ في الحصول على الموقع:", error);
+                        showNotification('تعذر الحصول على موقعك. يرجى التأكد من تفعيل خدمة الموقع.', 'error');
+                        document.getElementById('progressBar').style.display = 'none';
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 60000
+                    }
+                );
+            } else {
+                showNotification('المتصفح لا يدعم خدمة الموقع', 'error');
+            }
+        }
+
+        // عرض جميع المواقع
+        function showAllSites() {
+            map.setView([28.0339, 1.6596], 6);
+            populateTable(plantingSites);
+            updateMapMarkers(plantingSites);
+            showNotification('تم عرض جميع المواقع', 'success');
+        }
+
+        // التركيز على موقع معين
+        function focusOnSite(id, state, municipality) {
+            const site = plantingSites.find(s => 
+                s.id === id && s.state === state && s.municipality === municipality
+            );
+            
+            if (site) {
+                map.setView([site.lat, site.lng], 12);
+                
+                // فتح النافذة المنبثقة للعلامة
+                const markerObj = markers.find(m => 
+                    m.id === id && m.site.state === state && m.site.municipality === municipality
+                );
+                
+                if (markerObj) {
+                    markerObj.marker.openPopup();
+                }
+                
+                // إبراز الصف في الجدول
+                const rows = document.querySelectorAll('#tableBody tr');
+                rows.forEach(row => {
+                    row.classList.remove('highlight');
+                    if (
+                        row.getAttribute('data-site-id') == id &&
+                        row.getAttribute('data-state') === state &&
+                        row.getAttribute('data-municipality') === municipality
+                    ) {
+                        row.classList.add('highlight');
+                        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
+            }
+        }
+
+        // التوجه إلى موقع معين (محاكاة)
+        function navigateToSite(lat, lng, area) {
+            showNotification(`جاري التوجه إلى ${area}...`, 'success');
+            
+            // محاكاة فتح تطبيق الخرائط
+            setTimeout(() => {
+                if (confirm(`هل تريد فتح ${area} في تطبيق الخرائط؟`)) {
+                    // في التطبيق الحقيقي، سيتم فتح رابط الخرائط
+                    window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+                }
+            }, 500);
+        }
+
+        // حساب المسافة باستخدام صيغة هافرساين (للمسافات القصيرة)
+        function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // نصف قطر الأرض بالكيلومترات
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // حساب المسافة على الطريق (محاكاة)
+        async function calculateRoadDistance(lat1, lon1, lat2, lon2) {
+            // في التطبيق الحقيقي، سيتم استخدام API مثل OpenRouteService
+            // هنا نستخدم محاكاة بسيطة بإضافة عامل زيادة للمسافة على الطريق
+            
+            // حساب المسافة الجوية
+            const airDistance = calculateHaversineDistance(lat1, lon1, lat2, lon2);
+            
+            // محاكاة التأخير في الاستجابة
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // إضافة عامل زيادة للمسافة على الطريق (بين 1.2 و 1.8)
+            const roadFactor = 1.2 + Math.random() * 0.6;
+            return airDistance * roadFactor;
+        }
+
+        // حساب وقت السير
+        function calculateWalkingTime(distanceKm) {
+            const walkingSpeed = 5; // 5 كم/ساعة
+            const timeHours = distanceKm / walkingSpeed;
+            const hours = Math.floor(timeHours);
+            const minutes = Math.round((timeHours - hours) * 60);
+            
+            if (hours > 0) {
+                return `${hours} ساعة و ${minutes} دقيقة`;
+            } else {
+                return `${minutes} دقيقة`;
+            }
+        }
+
+        // تهيئة التطبيق عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', initMap);
+    </script>
+</body>
+</html>
